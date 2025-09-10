@@ -1,0 +1,29 @@
+.notification {
+    background-color: rgb(181, 235, 177);
+    color:rgb(50, 173, 50);
+    border-radius: 2rem;
+    border-style: solid;
+    width: 50%
+}
+
+.errNotification {
+    background-color: rgb(228, 82, 82);
+    color:rgb(218, 42, 42);
+    border-radius: 2rem;
+    border-style: solid;
+    width: 50%
+}
+
+.notification p {
+    color: black;
+    font-size: 20px;
+    border: none;
+    margin-left: 2rem;
+}
+
+.errNotification p {
+    color: black;
+    font-size: 20px;
+    border: none;
+    margin-left: 2rem;
+}
