@@ -44,7 +44,8 @@ const App = () => {
     if (window.confirm("Do you want to delete this person?")){
       personService.deletePerson(id)
       .then(data => {
-        setPersons(persons.filter((person) => person.id !== data.id ))
+        setPersons(data)
+        console.log("deleted")
         showNotification("Person removed sucessfully!", 3)
       }).catch(error => {
         setErrorNotif(true)
@@ -62,11 +63,12 @@ const App = () => {
       if(person.number !== newNumber){
         personService.editNumber(person.id, {...person, number: newNumber})
         .then(data => {
-          setPersons(persons.map(person => person.id !== data.id ? person : data))
+          setPersons(data)
+          console.log("adding people")
           showNotification(`Changed ${person.name} number to ${newNumber}`, 3)
         }).catch(err => {
           setErrorNotif(true)
-          showNotification(`Couldn't change ${person.name} number!`)
+          showNotification(`Couldn't change ${person.name} number!`, 3)
         })
       }else{
         alert(`${newName} already exists with this number!`)
@@ -74,7 +76,7 @@ const App = () => {
     }else{
       personService.addPerson(newName, newNumber)
       .then(data => {
-        setPersons(persons.concat(data))
+        setPersons(data)
         showNotification(`Added ${newName}`, 3)
       }).catch(err => {
         setErrorNotif(true)
