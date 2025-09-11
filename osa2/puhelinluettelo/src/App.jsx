@@ -32,7 +32,6 @@ const App = () => {
 
   //Use time in seconds
   const showNotification = (message, time) => {
-    console.log("Show notification", message, time)
     setNotification(message)
     setTimeout(() => {
       setNotification(null)
@@ -44,8 +43,7 @@ const App = () => {
     if (window.confirm("Do you want to delete this person?")){
       personService.deletePerson(id)
       .then(data => {
-        setPersons(data)
-        console.log("deleted")
+        setPersons(persons.filter(person => person.id !== data.id))
         showNotification("Person removed sucessfully!", 3)
       }).catch(error => {
         setErrorNotif(true)
@@ -63,7 +61,7 @@ const App = () => {
       if(person.number !== newNumber){
         personService.editNumber(person.id, {...person, number: newNumber})
         .then(data => {
-          setPersons(data)
+          setPersons(persons.map(pers => pers.id === person.id ? data : pers))
           console.log("adding people")
           showNotification(`Changed ${person.name} number to ${newNumber}`, 3)
         }).catch(err => {
@@ -76,7 +74,7 @@ const App = () => {
     }else{
       personService.addPerson(newName, newNumber)
       .then(data => {
-        setPersons(data)
+        setPersons(persons.concat(data))
         showNotification(`Added ${newName}`, 3)
       }).catch(err => {
         setErrorNotif(true)
