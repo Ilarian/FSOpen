@@ -7,7 +7,8 @@
     "dev": "node --watch index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:ui": "@powershell Remove-Item -Recurse -Force dist && cd ../../osa2/puhelinluettelo && npm run build && @powershell Copy-Item dist -Recurse ../../osa3/puhelinluettelobackend && cd ../../osa3/puhelinluettelobackend && npm run dev",
-    "deploy:full": "npm run build:ui && cd ../.. && git add . && git commit -m uibuild && git push"
+    "deploy:full": "npm run build:ui && cd ../.. && git add . && git commit -m uibuild && git push",
+    "lint": "eslint ."
   },
   "author": "",
   "license": "ISC",
@@ -18,5 +19,11 @@
     "express": "^5.1.0",
     "mongoose": "^8.18.1",
     "morgan": "^1.10.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.35.0",
+    "@stylistic/eslint-plugin-js": "^4.4.1",
+    "eslint": "^9.35.0",
+    "globals": "^16.4.0"
   }
 }
