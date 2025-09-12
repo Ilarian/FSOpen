@@ -56,7 +56,6 @@ app.post('/api/persons', (req, res, next) => {
     const {name, number} = req.body
 
     if(!name || !number) return res.status(400).send({error: 'Missing name or number'})
-    //if(persons.some(person => person.name === name)) return res.status(400).send({error: "name must be unique"})
 
     const newPerson = new Person({
             name: name,
@@ -83,7 +82,11 @@ app.put('/api/persons/:id', (req, res, next) => {
 })
 
 const errorHandler = (error, req, res, next) => {
-  console.error(error)
+  console.error(error.name)
+
+  if (error.name === 'ValidationError'){
+    return res.status(400).send({error: 'Invalid input'})
+  }
 
   if (error.name === "CastError") {
     return res.status(400).send({error: 'malformatted id'})

@@ -77,8 +77,14 @@ const App = () => {
         setPersons(persons.concat(data))
         showNotification(`Added ${newName}`, 3)
       }).catch(err => {
+        console.log(err)
         setErrorNotif(true)
-        showNotification(`${newName} couldn't be added!`, 3)
+        console.log(err.response.data.error)
+        if(err.response.data.error){
+          showNotification(err.response.data.error, 3)
+        }else{
+          showNotification(`${newName} couldn't be added!`, 3)
+        }
       })
       
     }
