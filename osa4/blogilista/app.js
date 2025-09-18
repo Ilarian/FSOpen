@@ -5,6 +5,7 @@ const blogsRouter = require('./controllers/blogs')
 
 const app = express()
 
+
 mongoose.connect(DB_URI)
 
 app.use(express.json())
