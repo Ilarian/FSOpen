@@ -1,12 +1,83 @@
-const { test, after, beforeEach, describe } = require('node:test')
+const { test, after, beforeEach, before, describe, it } = require('node:test')
 const assert = require('node:assert')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const Blog = require("../models/Blog")
+const User = require("../models/User")
 const { listWithMultipleBlogs } = require('./data')
 const api = supertest(app)
 
+
+before(async () => {
+        await User.deleteMany({})
+        await Blog.deleteMany({})
+    })
+
+after(async () => {
+        await mongoose.connection.close()
+})
+
+describe.only("User API", () => {
+    
+
+    it.only("Users are fetched properly", async () => {
+        const res = await api.get('/api/users/').expect(200)
+    })
+
+    it.only("User is added to database properly", async() => {
+        const user = {
+            username: "tester",
+            password: "testpassword",
+            name: "Test User"
+        }
+        const res = await api.post('/api/users/').send(user).expect(201)
+        const newUser = await User.findById(res.body.id)
+        assert.strictEqual(newUser.username, user.username)
+        assert.strictEqual(newUser.name, user.name)
+    })
+
+    it.only("Invalid data is handled correctly", async() => {
+        //faulty data
+        const f1 = {username: "as", password:"asdasdasd", name:"adfa"}
+        const f2 = {username: "albert", password:"as", name:"asdasd"}
+        const f3 = {username: "asda", password:"asda"}
+        const f4 = {username: "pasta", password:"", name:"", extra:""}
+        const f5 = {password:"", name:"", extra:""}
+
+        //taulukko.forEach(data => await api.post().send(data).expect(400))
+        await api.post('/api/users/').send(f1).expect(400)
+        await api.post('/api/users/').send(f2).expect(400)
+        await api.post('/api/users/').send(f3).expect(400)
+        await api.post('/api/users/').send(f4).expect(400)
+        await api.post('/api/users/').send(f5).expect(400)
+    })
+
+    it.only("User with same name causes an error", async() => {
+        const user = {
+            username: "tester",
+            password: "testpassword",
+            name: "Test User"
+        }
+        await api.post('/api/users/').send(user).expect(500)
+    })
+
+    it.only("Adds an user and blog post for the user, returns correct info", async () => {
+        const blog = {
+                "title": "Cancer rates of mice exposed to air",
+                "author": "Stein, Edgar Ingrosso",
+                "url": "realscience.com/cancer-rate-of-mice-study",
+                "likes": 2,
+            }
+
+        await api.post('/api/blogs/').send(blog).expect(201)
+
+        const res = await api.get('/api/blogs/')
+        assert.strictEqual(res.body[0].user.hasOwnProperty('username'), true)
+    })
+
+
+})
 
 describe("TESTS", () => {
     after(async () => {
