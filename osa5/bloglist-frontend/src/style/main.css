@@ -1,0 +1,15 @@
+.login {
+    width:10rem;
+}
+
+.form {
+    width: 10rem;
+}
+
+.error{
+    color:red;
+}
+
+.notification{
+    color: green;
+}
