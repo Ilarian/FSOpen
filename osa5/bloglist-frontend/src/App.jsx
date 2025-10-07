@@ -62,7 +62,8 @@ const App = () => {
   const addBlog = async (newBlog) => {
     try{
       const req = await blogService.addBlog(newBlog)
-      setBlogs(blogs.concat(req))
+      const addedBlog = {...req, user: user}
+      setBlogs(blogs.concat(addedBlog))
       setNotification('Blog created successfully!')
       blogFormRef.current.toggleVisibility()
     }catch(err){

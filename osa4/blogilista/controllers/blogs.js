@@ -1,9 +1,5 @@
 const blogsRouter = require("express").Router()
-const jwt = require('jsonwebtoken')
 const Blog = require('../models/Blog')
-const User = require('../models/User')
-const {SECRET} = require('../utils/config')
-
 
 blogsRouter.get('', async (req, res) => {
   const blogs = await Blog.find({}).populate('user', {username: 1, name: 1, id: 1})
