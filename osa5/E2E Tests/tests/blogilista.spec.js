@@ -92,6 +92,5 @@ describe('Blog app', () => {
       await expect(page.getByRole('button', { name: 'remove' })).toHaveCount(0)
     })
 
-    test('Blogs are ordered by ammount of likes')
   })
 })
