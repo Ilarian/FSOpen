@@ -50,27 +50,5 @@ const anecdoteSlice = createSlice({
   }
 })
 
-  
-
-export const voteAction = (id) => {
-  return {
-    type: "VOTE",
-    payload: {
-      id: id
-    }
-  }
-}
-
-export const addAnecdoteAction = (anecdote) => {
-  return {
-    type: "ADD",
-    payload: {
-      content: anecdote,
-      id: getId(),
-      votes: 0
-    }
-  }
-}
-
 export const {voteAnecdote, addAnecdote} = anecdoteSlice.actions
 export default anecdoteSlice.reducer
