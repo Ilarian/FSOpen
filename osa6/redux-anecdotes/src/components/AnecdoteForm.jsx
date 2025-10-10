@@ -1,16 +1,16 @@
 import { useSelector, useDispatch } from 'react-redux'
-import { addAnecdote } from '../reducers/anecdoteReducer'
-import { setNotification } from '../reducers/notificationReducer'
+import { createAnecdote } from '../reducers/anecdoteReducer'
+import { setNotif } from '../reducers/notificationReducer'
 
 const CreateAnecdote = () => {
     const anecdotes = useSelector(state => state)
     const dispatch = useDispatch()
 
-    const handleNew = (event) => {
+    const handleNew = async (event) => {
         event.preventDefault()
         const anecdote = event.target.anecdote.value
-        dispatch(addAnecdote(anecdote))
-        dispatch(setNotification('You created a new anecdote'))
+        dispatch(createAnecdote(anecdote))
+        dispatch(setNotif('You created a new anecdote', 3))
     }
     
     return (

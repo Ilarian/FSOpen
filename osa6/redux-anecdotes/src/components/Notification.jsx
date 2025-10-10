@@ -9,8 +9,8 @@ const Notification = () => {
   useEffect(() => {
     if(notification){
       const timer = setTimeout(() => {
-        dispatch(setNotification(''))
-      }, 5000)
+        dispatch(setNotification(null))
+      }, 1000 * notification.timer)
 
       return () => clearTimeout(timer);
     }
@@ -25,7 +25,7 @@ const Notification = () => {
   return (
     notification ? 
       <div style={style}>
-        {notification}
+        {notification.content}
       </div>
     :
       <></>
