@@ -67,4 +67,21 @@ export const removeBlog = (id, user) => {
     }
 }
 
+export const addComment = (id, comment) => {
+    return async (dispatch, getState) => {
+        try{
+            const response = await blogService.addComment(comment, id)
+            const commentedBlogs = getState().blogs.map(blog => {
+                if(blog.id === id){
+                    blog = {...blog, comments: response.comments}
+                }
+                return blog
+            })
+            dispatch(setBlogs(commentedBlogs))
+        }catch(err){
+            console.log(err)
+        }
+    }
+}
+
 export default blogSlice.reducer

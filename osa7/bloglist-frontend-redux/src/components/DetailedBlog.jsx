@@ -3,8 +3,10 @@ import { useSelector } from "react-redux"
 import { useDispatch } from "react-redux"
 import { useNavigate } from "react-router"
 import { removeBlog, likeBlog } from "../reducers/blogReducer"
+import AddComment from "./AddComment"
 
 const DetailedBlog = () => {
+
     const {id} = useParams()
     const dispatch = useDispatch()
     const navigate = useNavigate()
@@ -13,7 +15,6 @@ const DetailedBlog = () => {
     const blog = blogs.find(blog => blog.id === id)
 
     const handleRemoveBlog = (id) => {
-        console.log("hello?")
         dispatch(removeBlog(id, user))
         navigate(-1)
     };
@@ -35,6 +36,7 @@ const DetailedBlog = () => {
                     </button>
                 </p>
                 <p>{blog.user.name}</p>
+
                 {blog.user.name === user.name ? (
                     <button
                         onClick={() => {
@@ -51,6 +53,9 @@ const DetailedBlog = () => {
                 ) : (
                     <></>
                 )}
+                <AddComment id={id}/>
+                <h3>Comments</h3>
+                <ul>{blog.comments.map(c => <li key={c}>{c}</li>)}</ul>
         </div> : <h2>No blog found</h2>
             )
 }

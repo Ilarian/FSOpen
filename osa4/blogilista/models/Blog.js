@@ -8,6 +8,7 @@ const blogSchema = mongoose.Schema({
     ref: 'Users'
   },
   url: String,
+  comments: [String],
   likes: {type: Number, default: 0},
 })
 

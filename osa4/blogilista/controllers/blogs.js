@@ -33,6 +33,26 @@ blogsRouter.post('', async (req, res) => {
   
 })
 
+//POST COMMENTS
+blogsRouter.post('/:id/comments', async(req, res) => {
+    const {comment} = req.body
+    console.log("comment: ",comment)
+    const id = req.params.id
+    console.log("id: ",id)
+    if(!id) return res.status(400).send({error: "No id provided"})
+    if(!comment) return res.status(400).send({error: "No comment provided"})
+  
+    try{
+      const blog = await Blog.findById(id)
+      blog.comments.push(comment)
+      const response = await blog.save()
+      console.log(response)
+      res.send(response)
+    }catch (err){
+      console.log(err)
+    }
+})
+
 blogsRouter.delete('/:id', async (req, res) => {
   if(!req.params.id) return res.status(400).send({error: "No id provided"})
   if(!req.user) return res.status(400).send({error: "invalid token"})
