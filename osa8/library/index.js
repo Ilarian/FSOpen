@@ -1,5 +1,6 @@
 const { ApolloServer } = require('@apollo/server')
 const { startStandaloneServer } = require('@apollo/server/standalone')
+const {randomUUID} = require('crypto')
 
 let authors = [
   {
@@ -101,13 +102,14 @@ const typeDefs = `
   type Author {
     name: String!
     id: ID!
-    born: Int!
+    born: Int
+    bookCounts: Int!
   }
 
   type Book {
     title: String!
     published: Int!
-    author: Author!
+    author: String!
     id: String!
     genres: [String!]! 
   }
@@ -115,6 +117,18 @@ const typeDefs = `
   type Query {
     authorCount: Int!
     bookCount: Int!
+    allBooks(author: String, genre: String): [Book!]!
+    allAuthors: [Author!]!
+  }
+
+  type Mutation {
+    addBook(
+    title: String!
+    published: Int!
+    author: String!
+    genres: [String!]!): Book!
+
+    editAuthor(name: String!, setBornTo: Int): Author
   }
 `
 
@@ -122,6 +136,44 @@ const resolvers = {
   Query: {
     authorCount: () => authors.length,
     bookCount: () => books.length,
+    allBooks: (root, args) => {
+        let filtered = books
+        if(args.author){
+            filtered = filtered.filter(b => b.author.toLowerCase() === args.author.toLowerCase())
+        }
+        if(args.genre){
+            filtered = filtered.filter(b => b.genres.includes(args.genre))
+        }
+        return filtered
+        
+    },
+    allAuthors: () => authors
+  },
+  Author: {
+    bookCounts: ({name}) => {
+        return books.filter(book => book.author === name).length
+    }
+  },
+  Mutation: {
+    addBook: (root, args) => {
+        const book = { ...args, id: randomUUID()}
+        books = books.concat(book)
+        if(!authors.find(a => a.name === args.author)){
+            authors = authors.concat({name: args.author, id: randomUUID()})
+        }
+        return book
+    },
+    editAuthor: (root, args) => {
+        const author = authors.find(a => a.name === args.name)
+        if (!author){
+            return null
+        }
+        if (args.setBornTo){
+            updatedAuthor = {...author, born: args.setBornTo}
+            authors = authors.map(a => a.name == author.name ? updatedAuthor : a)
+            return updatedAuthor
+        }
+    }
   }
 }
 
