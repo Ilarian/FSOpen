@@ -1,6 +1,11 @@
 const { ApolloServer } = require('@apollo/server')
 const { startStandaloneServer } = require('@apollo/server/standalone')
 const {randomUUID} = require('crypto')
+const mongoose = require('mongoose')
+const Book = require('./schemas/Book')
+const Author = require('./schemas/Author')
+const { GraphQLError } = require('graphql')
+require('dotenv').config()
 
 let authors = [
   {
@@ -98,6 +103,18 @@ let books = [
   you can remove the placeholder query once your first one has been implemented 
 */
 
+const MONGODB_URI = process.env.MONGODB_URI
+
+console.log('connecting to', MONGODB_URI)
+
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    console.log('connected to MongoDB')
+  })
+  .catch((error) => {
+    console.log('error connection to MongoDB:', error.message)
+  })
+
 const typeDefs = `
   type Author {
     name: String!
@@ -109,15 +126,15 @@ const typeDefs = `
   type Book {
     title: String!
     published: Int!
-    author: String!
-    id: String!
-    genres: [String!]! 
-  }
+    author: Author!
+    genres: [String!]!
+    id: ID!
+}
 
   type Query {
     authorCount: Int!
     bookCount: Int!
-    allBooks(author: String, genre: String): [Book!]!
+    allBooks(author: String, genre: [String]): [Book!]!
     allAuthors: [Author!]!
   }
 
@@ -134,45 +151,94 @@ const typeDefs = `
 
 const resolvers = {
   Query: {
-    authorCount: () => authors.length,
-    bookCount: () => books.length,
-    allBooks: (root, args) => {
-        let filtered = books
+    authorCount: async () => Author.collection.countDocuments(),
+    bookCount: async () => Book.collection.countDocuments(),
+    allBooks: async (root, args) => {
+        let books
         if(args.author){
-            filtered = filtered.filter(b => b.author.toLowerCase() === args.author.toLowerCase())
+            const author = await Author.findOne({name: args.author})
+            books = await Book.find({author: author.id}).populate('author')
         }
         if(args.genre){
-            filtered = filtered.filter(b => b.genres.includes(args.genre))
+          if(args.author){
+            console.log(books)
+            books = books.filter(b => args.genre.some(g => b.genres.includes(g)))
+          }else{
+            books = Book.find({genres: {$elemMatch: {$in: args.genre}}}).populate('author')
+          }
         }
-        return filtered
+        if(!args.genre && !args.author){
+          books = Book.find({}).populate('author')
+        }
+        return books
         
     },
-    allAuthors: () => authors
+    allAuthors: async () => Author.find({})
   },
   Author: {
-    bookCounts: ({name}) => {
+    bookCounts: async ({name}) => {
+        const books = await Book.find({})
         return books.filter(book => book.author === name).length
     }
   },
   Mutation: {
-    addBook: (root, args) => {
-        const book = { ...args, id: randomUUID()}
-        books = books.concat(book)
-        if(!authors.find(a => a.name === args.author)){
-            authors = authors.concat({name: args.author, id: randomUUID()})
+    addBook: async (root, args) => {
+        const authors = await Author.find({})
+        const author = authors.find(a => a.name === args.author)
+        if(!author){
+            const newAuthor = new Author({name: args.author})
+            try{
+              await newAuthor.save()
+            }catch(err){
+              throw new GraphQLError("Author name too short, min 4 characters", {
+                extensions: {
+                  code: 'BAD_USER_INPUT',
+                  invalidArgs: args.author.name,
+                  err
+                }
+              })
+            }
+
+            const book = new Book({ ...args, author: newAuthor.id, id: randomUUID()})
+            try{
+              await book.save()
+              
+            }catch(err){
+              console.log("haloo")
+              throw new GraphQLError("Book title too short, min 5 characters", {
+                extensions: {
+                  code: 'BAD_USER_INPUT',
+                  invalidArgs: args.title,
+                  err
+                }
+              })
+            }
+            return book
+        }else{
+          const book = new Book({ ...args, author: author.id, id: randomUUID()})
+          try{
+            await book.save()
+          }catch(err){
+            throw new GraphQLError("Book title too short, min 5 characters", {
+                extensions: {
+                  code: 'BAD_USER_INPUT',
+                  invalidArgs: args.title,
+                  err
+                }
+              })
+          }
+          return book
         }
-        return book
     },
-    editAuthor: (root, args) => {
-        const author = authors.find(a => a.name === args.name)
-        if (!author){
-            return null
-        }
-        if (args.setBornTo){
-            updatedAuthor = {...author, born: args.setBornTo}
-            authors = authors.map(a => a.name == author.name ? updatedAuthor : a)
-            return updatedAuthor
-        }
+    editAuthor: async (root, args) => {
+      const author = await Author.findOne({name: args.name})
+      if (!author){
+          return null
+      }
+      if (args.setBornTo){
+          author.born = args.setBornTo
+          return author.save()
+      }
     }
   }
 }
