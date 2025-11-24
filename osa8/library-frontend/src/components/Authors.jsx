@@ -22,7 +22,13 @@ const Authors = (props) => {
   if(result.loading){
     return <div>loading...</div>
   }
+
+  
   const authors = result.data.allAuthors
+
+  if(authors.length === 0){
+    return null
+  }
 
   return (
     <div>

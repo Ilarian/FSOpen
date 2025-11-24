@@ -1,30 +1,76 @@
 import { gql } from '@apollo/client'
 import {useQuery} from '@apollo/client/react'
+import { useEffect, useState } from 'react'
 
 
 const Books = (props) => {
 
+  const [allBooks, setAllBooks] = useState([])
+  const [booksToShow, setBooksToShow] = useState([])
+
   const ALL_BOOKS = gql`
-    query Query {
+    query AllBooks {
       allBooks {
-        title
-        published
-        author
-        id
         genres
+        id
+        published
+        title
+        author {
+          name
+        }
       }
     }
   `
 
+  const ONE_GENRE = gql`
+  query Query($genre: [String]) {
+    allBooks(genre: $genre) {
+        author {
+            name
+        }
+        published
+        title
+      }
+  }
+  `
+
   const result = useQuery(ALL_BOOKS)
 
+  const oneGenre = useQuery(ONE_GENRE)
+
+  useEffect(() => {
+    if(!result.loading){
+      setAllBooks(result.data.allBooks)
+      setBooksToShow(result.data.allBooks)
+    }
+  }, [result])
+
+  if(result.loading) return <div>loading...</div>
+  
   if (!props.show) {
     return null
   }
 
-  if(result.loading) return <div>loading...</div>
+  const uniqueGenres = () => {
+    let uniqueGenres = []
+    allBooks.map(book => {
+      book.genres.forEach((genre) => {
+        if(!uniqueGenres.includes(genre)){
+          uniqueGenres.push(genre)
+        }
+      })
+    })
+    return uniqueGenres.concat("all")
+  }
 
-  const books = result.data.allBooks
+  const handleGenre = (genre) => {
+    if(genre === 'all'){
+      setBooksToShow(allBooks)
+    }else{
+      oneGenre.refetch({genre: genre}).then(res => setBooksToShow(res.data.allBooks))
+    }
+  }
+  
 
   return (
     <div>
@@ -33,19 +79,22 @@ const Books = (props) => {
       <table>
         <tbody>
           <tr>
-            <th></th>
+            <th>title</th>
             <th>author</th>
             <th>published</th>
           </tr>
-          {books.map((a) => (
+          {booksToShow.map((a) => (
             <tr key={a.title}>
               <td>{a.title}</td>
-              <td>{a.author}</td>
+              <td>{a.author.name}</td>
               <td>{a.published}</td>
             </tr>
           ))}
         </tbody>
       </table>
+      {uniqueGenres().map((genre) => {
+        return <button key={genre} onClick={() => handleGenre(genre)}>{genre}</button>
+      })}
     </div>
   )
 }

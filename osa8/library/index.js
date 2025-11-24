@@ -32,6 +32,7 @@ const typeDefs = `
 
   type User {
     username: String!
+    favoriteGenre: String
     id: ID!
   }
 
@@ -57,11 +58,12 @@ const typeDefs = `
 
   type Mutation {
     addBook(
-    title: String!
-    published: Int!
-    author: String!
-    genres: [String!]!): Book
-    createUser(username: String!): User
+      title: String!
+      published: Int!
+      author: String!
+      genres: [String!]!): Book
+
+    createUser(username: String!, favoriteGenre: String): User
     login(username: String!, password: String!): Token
     editAuthor(name: String!, setBornTo: Int): Author
   }
@@ -104,14 +106,18 @@ const resolvers = {
   },
   Mutation: {
     addBook: async (root, args, context) => {
-        if(!context.currentUser) return null
+        if(!context.currentUser){
+          console.log("no currentuser")
+          return null
+        }
         const authors = await Author.find({})
-        const author = authors.find(a => a.name === args.author)
+        let author = authors.find(a => a.name === args.author)
         if(!author){
-            const newAuthor = new Author({name: args.author})
+            author = new Author({name: args.author})
             try{
-              await newAuthor.save()
+              await author.save()
             }catch(err){
+              console.log(err)
               throw new GraphQLError("Author name too short, min 4 characters", {
                 extensions: {
                   code: 'BAD_USER_INPUT',
@@ -120,13 +126,11 @@ const resolvers = {
                 }
               })
             }
-
-            const book = new Book({ ...args, author: newAuthor.id, id: randomUUID()})
+            const book = new Book({ ...args, author: author.id, id: randomUUID()})
             try{
               await book.save()
-              
             }catch(err){
-              console.log("haloo")
+              console.log(err)
               throw new GraphQLError("Book title too short, min 5 characters", {
                 extensions: {
                   code: 'BAD_USER_INPUT',
@@ -135,12 +139,13 @@ const resolvers = {
                 }
               })
             }
-            return book
+            return book.populate('author')
         }else{
           const book = new Book({ ...args, author: author.id, id: randomUUID()})
           try{
             await book.save()
           }catch(err){
+            console.log(err)
             throw new GraphQLError("Book title too short, min 5 characters", {
                 extensions: {
                   code: 'BAD_USER_INPUT',
@@ -149,7 +154,7 @@ const resolvers = {
                 }
               })
           }
-          return book
+          return book.populate('author')
         }
     },
     editAuthor: async (root, args, context) => {
@@ -164,7 +169,7 @@ const resolvers = {
       }
     },
     createUser: async (root, args) => {
-      const user = new User({ username: args.username })
+      const user = new User({ username: args.username, favoriteGenre: args.favoriteGenre })
 
       return user.save()
         .catch(error => {
